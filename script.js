@@ -1,7 +1,15 @@
+import {
+  createAuthPanel,
+  loadReports,
+  saveReport,
+  getCurrentUser,
+  SELECTED_DAY_KEY
+} from "./firebase-service.js";
+
 (function () {
-  const REPORTS_KEY = "dailyReports";
-  const SELECTED_DAY_KEY = "selectedReportDay";
   const DRAFT_KEY = "todayDraft";
+
+  createAuthPanel();
 
   const tasks = Array.from(document.querySelectorAll(".task"));
   const progress = document.getElementById("progress");
@@ -60,48 +68,6 @@
       hour: "2-digit",
       minute: "2-digit"
     });
-  }
-
-  function normalizeReports(value) {
-    if (!Array.isArray(value)) return [];
-
-    return value
-      .filter(report => report && (report.dateKey || report.id))
-      .map(report => {
-        const dateKey = report.dateKey || report.id;
-        const reportTasks = Array.isArray(report.tasks) ? report.tasks : [];
-        const fields = Array.isArray(report.fields) ? report.fields : [];
-        const total = Number.isFinite(report.total) ? report.total : reportTasks.length;
-        const completed = Number.isFinite(report.completed)
-          ? report.completed
-          : reportTasks.filter(task => task.completed).length;
-
-        return {
-          ...report,
-          id: dateKey,
-          dateKey,
-          total,
-          completed,
-          tasks: reportTasks,
-          fields
-        };
-      })
-      .sort((a, b) => a.dateKey.localeCompare(b.dateKey));
-  }
-
-  function getReports() {
-    try {
-      return normalizeReports(JSON.parse(localStorage.getItem(REPORTS_KEY)) || []);
-    } catch (error) {
-      console.error("Could not read reports", error);
-      return [];
-    }
-  }
-
-  function saveReports(reports) {
-    const normalized = normalizeReports(reports);
-    localStorage.setItem(REPORTS_KEY, JSON.stringify(normalized));
-    return normalized;
   }
 
   function buildCurrentReport() {
@@ -170,25 +136,19 @@
     }
   }
 
-  function saveDailyReport() {
+  async function saveDailyReport() {
     if (!storageWorks()) {
       showToast("Браузер не даёт сохранить данные. Проверь localStorage / private mode.", "error");
       if (saveStatus) saveStatus.textContent = "Ошибка: localStorage недоступен.";
       return;
     }
 
+    saveReportButton.disabled = true;
+    saveReportButton.textContent = "Сохраняю...";
+
     try {
       const report = buildCurrentReport();
-      const reports = getReports();
-      const existingIndex = reports.findIndex(item => item.dateKey === report.dateKey);
-
-      if (existingIndex >= 0) {
-        reports[existingIndex] = report;
-      } else {
-        reports.push(report);
-      }
-
-      const savedReports = saveReports(reports);
+      const savedReports = await saveReport(report);
       const savedReport = savedReports.find(item => item.dateKey === report.dateKey);
 
       if (!savedReport) {
@@ -198,15 +158,22 @@
       localStorage.setItem(SELECTED_DAY_KEY, report.dateKey);
       saveDraft();
 
+      const syncText = getCurrentUser()
+        ? "Сохранено и синхронизировано."
+        : "Сохранено на этом устройстве. Войди через Google, чтобы синхронизировать.";
+
       if (saveStatus) {
-        saveStatus.innerHTML = `✅ День сохранён. <a href="history.html?day=${report.dateKey}">Открыть в календаре</a>`;
+        saveStatus.innerHTML = `✅ ${syncText} <a href="history.html?day=${report.dateKey}">Открыть в календаре</a>`;
       }
 
-      showToast("✅ День сохранён в историю");
+      showToast(getCurrentUser() ? "✅ День сохранён и синхронизирован" : "✅ День сохранён на этом устройстве");
     } catch (error) {
       console.error("Could not save daily report", error);
-      showToast("Не получилось сохранить отчёт. Открой Console для ошибки.", "error");
+      showToast("Не получилось сохранить отчёт. Проверь вход/Firebase rules.", "error");
       if (saveStatus) saveStatus.textContent = "Ошибка: отчёт не сохранился.";
+    } finally {
+      saveReportButton.disabled = false;
+      saveReportButton.textContent = "Сохранить полный отчёт дня";
     }
   }
 
@@ -244,6 +211,15 @@
   if (saveReportButton) {
     saveReportButton.addEventListener("click", saveDailyReport);
   }
+
+  window.addEventListener("glowup-auth-changed", async () => {
+    try {
+      await loadReports();
+      showToast("✅ Синхронизация обновлена");
+    } catch (error) {
+      console.error("Could not refresh synced reports", error);
+    }
+  });
 
   updateProgress();
 })();

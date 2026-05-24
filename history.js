@@ -1,3 +1,13 @@
+import {
+  createAuthPanel,
+  loadReports,
+  deleteReport,
+  clearReports as clearReportsInStorage,
+  SELECTED_DAY_KEY
+} from "./firebase-service.js";
+
+createAuthPanel();
+
 const statsGrid = document.getElementById("statsGrid");
 const calendarGrid = document.getElementById("calendarGrid");
 const reportDetail = document.getElementById("reportDetail");
@@ -5,9 +15,6 @@ const clearReportsButton = document.getElementById("clearReports");
 const monthTitle = document.getElementById("monthTitle");
 const prevMonthButton = document.getElementById("prevMonth");
 const nextMonthButton = document.getElementById("nextMonth");
-
-const REPORTS_KEY = "dailyReports";
-const SELECTED_DAY_KEY = "selectedReportDay";
 
 function escapeHTML(value) {
   return String(value ?? "")
@@ -18,43 +25,23 @@ function escapeHTML(value) {
     .replace(/'/g, "&#039;");
 }
 
-function normalizeReports(value) {
-  if (!Array.isArray(value)) return [];
-
-  return value
-    .filter(report => report && (report.dateKey || report.id))
-    .map(report => {
-      const dateKey = report.dateKey || report.id;
-      const tasks = Array.isArray(report.tasks) ? report.tasks : [];
-      const fields = Array.isArray(report.fields) ? report.fields : [];
-      const total = Number.isFinite(report.total) ? report.total : tasks.length;
-      const completed = Number.isFinite(report.completed)
-        ? report.completed
-        : tasks.filter(task => task.completed).length;
-
-      return {
-        ...report,
-        id: dateKey,
-        dateKey,
-        total,
-        completed,
-        tasks,
-        fields
-      };
-    })
-    .sort((a, b) => a.dateKey.localeCompare(b.dateKey));
-}
-
-function getReports() {
-  try {
-    return normalizeReports(JSON.parse(localStorage.getItem(REPORTS_KEY)) || []);
-  } catch (error) {
-    return [];
+function showToast(message, type = "success") {
+  let toast = document.getElementById("toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+    document.body.appendChild(toast);
   }
-}
 
-function saveReports(reports) {
-  localStorage.setItem(REPORTS_KEY, JSON.stringify(normalizeReports(reports)));
+  toast.className = `toast show ${type}`;
+  toast.textContent = message;
+
+  window.clearTimeout(showToast.timer);
+  showToast.timer = window.setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2600);
 }
 
 function getSelectedId() {
@@ -104,12 +91,16 @@ function groupTasksByCategory(tasks) {
   }, {});
 }
 
-function renderStats(reports) {
-  const totalDays = reports.length;
-  const totalCompleted = reports.reduce((sum, report) => sum + (report.completed || 0), 0);
-  const totalTasks = reports.reduce((sum, report) => sum + (report.total || 0), 0);
+let reports = [];
+let selectedId = getSelectedId();
+let currentMonthDate = new Date();
+
+function renderStats(list) {
+  const totalDays = list.length;
+  const totalCompleted = list.reduce((sum, report) => sum + (report.completed || 0), 0);
+  const totalTasks = list.reduce((sum, report) => sum + (report.total || 0), 0);
   const average = totalTasks ? Math.round((totalCompleted / totalTasks) * 100) : 0;
-  const bestDay = reports.reduce((best, report) => {
+  const bestDay = list.reduce((best, report) => {
     const score = report.total ? report.completed / report.total : 0;
     const bestScore = best && best.total ? best.completed / best.total : -1;
     return score > bestScore ? report : best;
@@ -123,22 +114,22 @@ function renderStats(reports) {
   `;
 }
 
-let reports = getReports();
-let selectedId = getSelectedId();
+function chooseInitialDay() {
+  selectedId = getSelectedId();
 
-if (reports.length > 0 && !reports.some(report => report.dateKey === selectedId)) {
-  selectedId = reports[reports.length - 1].dateKey;
-  setSelectedId(selectedId);
+  if (reports.length > 0 && !reports.some(report => report.dateKey === selectedId)) {
+    selectedId = reports[reports.length - 1].dateKey;
+    setSelectedId(selectedId);
+  }
+
+  currentMonthDate = selectedId
+    ? parseDateKey(selectedId)
+    : reports.length > 0
+      ? parseDateKey(reports[reports.length - 1].dateKey)
+      : new Date();
 }
 
-let currentMonthDate = selectedId
-  ? parseDateKey(selectedId)
-  : reports.length > 0
-    ? parseDateKey(reports[reports.length - 1].dateKey)
-    : new Date();
-
 function renderCalendar() {
-  reports = getReports();
   const reportMap = new Map(reports.map(report => [report.dateKey, report]));
 
   const year = currentMonthDate.getFullYear();
@@ -188,7 +179,6 @@ function renderCalendar() {
 }
 
 function renderReportDetail() {
-  reports = getReports();
   const report = reports.find(item => item.dateKey === selectedId || item.id === selectedId);
 
   if (!report) {
@@ -242,28 +232,33 @@ function renderReportDetail() {
     </div>
   `;
 
-  document.getElementById("deleteOne").addEventListener("click", () => {
+  document.getElementById("deleteOne").addEventListener("click", async () => {
     const confirmDelete = confirm("Удалить отчёт за этот день?");
     if (!confirmDelete) return;
 
-    const updatedReports = getReports().filter(item => item.dateKey !== report.dateKey);
-    saveReports(updatedReports);
-    reports = updatedReports;
-    selectedId = reports.length ? reports[reports.length - 1].dateKey : null;
-    setSelectedId(selectedId);
-    currentMonthDate = selectedId ? parseDateKey(selectedId) : new Date();
-    renderStats(reports);
-    renderCalendar();
-    renderReportDetail();
+    try {
+      reports = await deleteReport(report.dateKey);
+      selectedId = reports.length ? reports[reports.length - 1].dateKey : null;
+      setSelectedId(selectedId);
+      currentMonthDate = selectedId ? parseDateKey(selectedId) : new Date();
+      renderStats(reports);
+      renderCalendar();
+      renderReportDetail();
+      showToast("День удалён");
+    } catch (error) {
+      console.error("Could not delete report", error);
+      showToast("Не получилось удалить день", "error");
+    }
   });
 }
 
-function clearReports() {
-  const confirmDelete = confirm("Удалить всю историю отчётов?");
+async function clearReports() {
+  const confirmDelete = confirm("Удалить всю историю отчётов? Это удалит историю и из Firebase, если ты вошла через Google.");
 
-  if (confirmDelete) {
-    localStorage.removeItem(REPORTS_KEY);
-    localStorage.removeItem(SELECTED_DAY_KEY);
+  if (!confirmDelete) return;
+
+  try {
+    await clearReportsInStorage();
     reports = [];
     selectedId = null;
     currentMonthDate = new Date();
@@ -271,6 +266,26 @@ function clearReports() {
     renderStats([]);
     renderCalendar();
     renderReportDetail();
+    showToast("История очищена");
+  } catch (error) {
+    console.error("Could not clear reports", error);
+    showToast("Не получилось очистить историю", "error");
+  }
+}
+
+async function refreshReports(showSyncedToast = false) {
+  try {
+    reportDetail.innerHTML = `<p class="empty">Загружаю отчёты...</p>`;
+    reports = await loadReports();
+    chooseInitialDay();
+    renderStats(reports);
+    renderCalendar();
+    renderReportDetail();
+    if (showSyncedToast) showToast("✅ История синхронизирована");
+  } catch (error) {
+    console.error("Could not load reports", error);
+    reportDetail.innerHTML = `<p class="empty">Не получилось загрузить отчёты. Проверь вход в Google и Firestore Rules.</p>`;
+    showToast("Не получилось загрузить Firebase-отчёты", "error");
   }
 }
 
@@ -285,7 +300,6 @@ nextMonthButton.addEventListener("click", () => {
 });
 
 clearReportsButton.addEventListener("click", clearReports);
+window.addEventListener("glowup-auth-changed", () => refreshReports(true));
 
-renderStats(reports);
-renderCalendar();
-renderReportDetail();
+refreshReports(false);
