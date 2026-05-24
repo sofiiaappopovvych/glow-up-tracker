@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Glow Up History</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="hero small-hero">
+    <nav class="top-nav">
+      <a href="index.html">Today</a>
+      <a class="active-nav" href="history.html">History / Calendar</a>
+    </nav>
+    <p class="eyebrow">Saved Results</p>
+    <h1>History / Calendar</h1>
+    <p class="hero-text">Выбери месяц и день, чтобы открыть полный сохранённый отчёт.</p>
+  </header>
+
+  <main class="history-page">
+    <section class="stats-grid" id="statsGrid"></section>
+
+    <section class="history calendar-section">
+      <div class="history-header">
+        <div>
+          <p class="eyebrow">Calendar View</p>
+          <h2>Календарь отчётов</h2>
+        </div>
+        <button type="button" class="danger" id="clearReports">Очистить историю</button>
+      </div>
+
+      <div class="calendar-controls">
+        <button type="button" class="calendar-nav" id="prevMonth">←</button>
+        <h3 id="monthTitle"></h3>
+        <button type="button" class="calendar-nav" id="nextMonth">→</button>
+      </div>
+
+      <div class="weekdays">
+        <span>Mon</span>
+        <span>Tue</span>
+        <span>Wed</span>
+        <span>Thu</span>
+        <span>Fri</span>
+        <span>Sat</span>
+        <span>Sun</span>
+      </div>
+
+      <div id="calendarGrid" class="calendar-grid"></div>
+      <div class="help-tip history-help">
+        <button type="button" class="help-button" aria-label="Показать подсказку">?</button>
+        <span class="help-text">Подсвеченные дни — это дни, где сохранён полный отчёт. Нажми на подсвеченный день, чтобы открыть checklist и текстовые заметки ниже.</span>
+      </div>
+    </section>
+
+    <section class="history report-detail" id="reportDetail">
+      <p class="empty">Выбери сохранённый день в календаре, чтобы открыть полный отчёт.</p>
+    </section>
+  </main>
+
+  <script src="history.js"></script>
+</body>
+</html>

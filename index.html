@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Glow Up Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="hero">
+    <nav class="top-nav">
+      <a class="active-nav" href="index.html">Today</a>
+      <a href="history.html">History / Calendar</a>
+    </nav>
+    <p class="eyebrow">Daily 60–90 minute routine</p>
+    <h1>Glow Up Tracker</h1>
+    <p class="hero-text">Track voice, diction, running, and nutrition — then save your full daily report.</p>
+    <a class="telegram" href="https://t.me/+M3jw103L47s0NDE6" target="_blank">Open Telegram Results Channel</a>
+  </header>
+
+  <main>
+
+    <section class="card vocal-card">
+      <div class="card-header">
+        <span class="icon">🎤</span>
+        <div>
+          <h2>Вокал</h2>
+          <p class="goal-text">Riffs, runs, melisma, tone accuracy</p>
+        </div>
+      </div>
+
+      <label><input type="checkbox" class="task" data-category="Вокал" data-task="Riffs and Runs"> 
+        <a href="https://youtube.com/playlist?list=PLjumkJUG-60IypxFIRAyfjGE5M0kAt3t9" target="_blank">Riffs and Runs</a>
+      </label>
+
+      <label><input type="checkbox" class="task" data-category="Вокал" data-task="Tone Accuracy"> 
+        <a href="https://youtu.be/sW0kDEtH53I" target="_blank">Tone Accuracy</a>
+      </label>
+
+      <label><input type="checkbox" class="task" data-category="Вокал" data-task="Vocal Tone"> 
+        <a href="https://youtu.be/iMO6fQJKwnc" target="_blank">Vocal Tone</a>
+      </label>
+
+      <textarea data-label="Вокал" placeholder="Отчёт: что получилось? где было сложно?"></textarea>
+    </section>
+
+    <section class="card diction-card">
+      <div class="card-header">
+        <span class="icon">🗣️</span>
+        <div>
+          <h2>Дикция</h2>
+          <p class="goal-text">Clearer speech in 2 months</p>
+        </div>
+      </div>
+
+      <label><input type="checkbox" class="task" data-category="Дикция" data-task="Дикция"> 
+        <a href="https://youtu.be/S285TrmTINQ" target="_blank">Дикция</a>
+      </label>
+
+      <label><input type="checkbox" class="task" data-category="Дикция" data-task="Артикуляция 1"> 
+        <a href="https://youtu.be/E4H4uY8IIho" target="_blank">Артикуляция 1</a>
+      </label>
+
+      <label><input type="checkbox" class="task" data-category="Дикция" data-task="Артикуляция 2"> 
+        <a href="https://youtu.be/89WXOMmtr24" target="_blank">Артикуляция 2</a>
+      </label>
+
+      <textarea data-label="Дикция" placeholder="Отчёт: какие звуки были сложные?"></textarea>
+    </section>
+
+    <section class="card running-card">
+      <div class="card-header">
+        <span class="icon">🏃‍♀️</span>
+        <div>
+          <h2>Бег</h2>
+          <p class="goal-text">Marathon preparation</p>
+        </div>
+      </div>
+
+      <label><input type="checkbox" class="task" data-category="Бег" data-task="Running Warm Up"> 
+        <a href="https://youtu.be/FhphV70cVcE" target="_blank">Running Warm Up</a>
+      </label>
+
+      <label><input type="checkbox" class="task" data-category="Бег" data-task="Running Playlist"> 
+        <a href="https://music.apple.com/us/playlist/pl.u-aZb0Dz9I1Gjga96" target="_blank">Running Playlist</a>
+      </label>
+
+      <input data-label="Distance" type="text" placeholder="Distance: example 3 miles">
+      <input data-label="Time" type="text" placeholder="Time: example 35 min">
+      <textarea data-label="Бег" placeholder="Отчёт: как чувствовала себя во время бега?"></textarea>
+    </section>
+
+    <section class="card nutrition-card">
+      <div class="card-header">
+        <span class="icon">🥗</span>
+        <div>
+          <h2>КБЖУ</h2>
+          <p class="goal-text">Food, calories, protein, fat, carbs</p>
+        </div>
+      </div>
+
+      <label><input type="checkbox" class="task" data-category="КБЖУ" data-task="Записать калории"> Записать калории</label>
+      <label><input type="checkbox" class="task" data-category="КБЖУ" data-task="Записать белки / жиры / углеводы"> Записать белки / жиры / углеводы</label>
+      <label><input type="checkbox" class="task" data-category="КБЖУ" data-task="Выпить достаточно воды"> Выпить достаточно воды</label>
+
+      <input data-label="Calories" type="text" placeholder="Calories">
+      <input data-label="Macros" type="text" placeholder="Protein / Fat / Carbs">
+      <textarea data-label="КБЖУ" placeholder="Отчёт: что ела сегодня?"></textarea>
+    </section>
+
+    <section class="summary">
+      <div class="help-tip">
+        <button type="button" class="help-button" aria-label="Показать подсказку">?</button>
+        <span class="help-text">Сохранение записывает полный отчёт дня: галочки, текст, дистанцию, время, калории и КБЖУ. “Сбросить день” очищает только сегодняшнюю форму, но не удаляет сохранённую историю.</span>
+      </div>
+      <p class="eyebrow">Today’s Progress</p>
+      <h2 id="progress">Выполнено: 0 из 0</h2>
+      <div class="button-row">
+        <button type="button" id="saveReport">Сохранить полный отчёт дня</button>
+        <button type="button" class="secondary" onclick="resetDay()">Сбросить день</button>
+        <a class="button-link permanent-link" href="history.html">Открыть статистику</a>
+      </div>
+      <p class="save-status" id="saveStatus" aria-live="polite"></p>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
