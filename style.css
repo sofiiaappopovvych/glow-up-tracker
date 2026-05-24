@@ -765,3 +765,67 @@ button:disabled {
     margin-top: -8px;
   }
 }
+
+.auth-panel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.auth-help {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.help-button {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: #111;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.help-tooltip {
+  position: absolute;
+  top: 38px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 260px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #111;
+  color: white;
+  font-size: 14px;
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 999;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+.auth-help:hover .help-tooltip,
+.auth-help:focus-within .help-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(4px);
+}
+
+@media (max-width: 600px) {
+  .help-tooltip {
+    left: 0;
+    transform: none;
+    width: 230px;
+  }
+
+  .auth-help:hover .help-tooltip,
+  .auth-help:focus-within .help-tooltip {
+    transform: translateY(4px);
+  }
+}
