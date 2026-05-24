@@ -261,23 +261,23 @@ export function createAuthPanel() {
   panel.className = "auth-panel";
 
   panel.innerHTML = `
-  <div class="auth-help">
-    <button type="button" class="help-button" aria-label="Подсказка">?</button>
-    <div class="help-tooltip">
-      Войди через Google, чтобы синхронизировать телефон и ноутбук.
+    <div class="auth-help">
+      <button type="button" class="auth-help-button" aria-label="Подсказка">?</button>
+      <div class="auth-tooltip">
+        Войди через Google, чтобы синхронизировать отчёты между телефоном и ноутбуком.
+      </div>
     </div>
-  </div>
 
-  <span id="authStatus">Проверяю вход...</span>
+    <span id="authStatus"></span>
 
-  <button type="button" id="signInButton" class="small-button">
-    Войти через Google
-  </button>
+    <button type="button" id="signInButton" class="small-button">
+      Войти через Google
+    </button>
 
-  <button type="button" id="signOutButton" class="small-button secondary" hidden>
-    Выйти
-  </button>
-`;
+    <button type="button" id="signOutButton" class="small-button secondary" hidden>
+      Выйти
+    </button>
+  `;
 
   if (header && nav) {
     nav.insertAdjacentElement("afterend", panel);
@@ -316,7 +316,7 @@ function updateAuthUI(user) {
     signInButton.hidden = true;
     signOutButton.hidden = false;
   } else {
-   status.textContent = "";
+    status.textContent = "";
     signInButton.hidden = false;
     signOutButton.hidden = true;
   }
