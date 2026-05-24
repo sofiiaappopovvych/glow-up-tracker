@@ -3,7 +3,8 @@ import {
   getAuth,
   GoogleAuthProvider,
   onAuthStateChanged,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
@@ -47,6 +48,18 @@ onAuthStateChanged(auth, user => {
   updateAuthUI(user);
   authReadyResolve?.(user);
 });
+
+getRedirectResult(auth)
+  .then(async result => {
+    if (result?.user) {
+      currentUser = result.user;
+      await syncLocalReportsToCloud();
+      window.dispatchEvent(new CustomEvent("glowup-auth-changed"));
+    }
+  })
+  .catch(error => {
+    console.error("Redirect sign-in failed", error);
+  });
 
 export function getCurrentUser() {
   return currentUser;
@@ -109,11 +122,8 @@ function mergeReports(localReports, cloudReports) {
       return;
     }
 
-    const existingTime =
-      Date.parse(existing.savedTimestamp || existing.updatedAt || "") || 0;
-
-    const nextTime =
-      Date.parse(report.savedTimestamp || report.updatedAt || "") || 0;
+    const existingTime = Date.parse(existing.savedTimestamp || existing.updatedAt || "") || 0;
+    const nextTime = Date.parse(report.savedTimestamp || report.updatedAt || "") || 0;
 
     map.set(id, nextTime >= existingTime ? report : existing);
   });
@@ -187,9 +197,7 @@ export async function loadReports() {
 
 export async function saveReport(report) {
   const localReports = getLocalReports();
-  const existingIndex = localReports.findIndex(
-    item => item.dateKey === report.dateKey
-  );
+  const existingIndex = localReports.findIndex(item => item.dateKey === report.dateKey);
 
   if (existingIndex >= 0) {
     localReports[existingIndex] = report;
@@ -219,10 +227,7 @@ export async function saveReport(report) {
 }
 
 export async function deleteReport(dateKey) {
-  const updated = getLocalReports().filter(
-    report => report.dateKey !== dateKey
-  );
-
+  const updated = getLocalReports().filter(report => report.dateKey !== dateKey);
   saveLocalReports(updated);
 
   await authReady;
@@ -287,9 +292,7 @@ export function createAuthPanel() {
 
   document.getElementById("signInButton")?.addEventListener("click", async () => {
     try {
-      await signInWithPopup(auth, provider);
-      await syncLocalReportsToCloud();
-      window.dispatchEvent(new CustomEvent("glowup-auth-changed"));
+      await signInWithRedirect(auth, provider);
     } catch (error) {
       console.error("Google sign-in failed", error);
       alert(
