@@ -19,7 +19,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD7WwW35Cq_aXBHnZsHfu4rW0RvPcFFQWs",
+  apiKey: "AIzaSyD7WwW35Cq_axBHnZsHfu4rW0RvPcFFQWs",
   authDomain: "glow-up-web.firebaseapp.com",
   projectId: "glow-up-web",
   storageBucket: "glow-up-web.firebasestorage.app",
