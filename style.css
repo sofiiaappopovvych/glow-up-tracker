@@ -1,40 +1,84 @@
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background:
-    radial-gradient(circle at top left, rgba(255, 195, 160, 0.45), transparent 32%),
-    radial-gradient(circle at top right, rgba(216, 180, 254, 0.45), transparent 28%),
-    linear-gradient(135deg, #fff7ed, #fdf2f8 55%, #eef2ff);
-  color: #2a2a2a;
-  min-height: 100vh;
-}
-
-.hero {
-  text-align: center;
-  padding: 34px 20px 34px;
-}
-
-.small-hero {
-  padding-bottom: 18px;
-}
-
-.top-nav {
-  display: flex;
+/* Firebase auth question-mark tooltip */
+.auth-panel {
   position: relative;
-  z-index: 10;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 28px;
+  max-width: 720px;
+  margin: -12px auto 24px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 24px rgba(84, 65, 100, 0.1);
+  font-size: 14px;
+  color: #333;
 }
 
-.top-nav a {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.85);
+.auth-help {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.auth-help-button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: #222;
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.auth-tooltip {
+  position: absolute;
+  top: 38px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  width: 260px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #222;
+  color: white;
+  font-size: 14px;
+  line-height: 1.4;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+  z-index: 9999;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+.auth-help:hover .auth-tooltip,
+.auth-help:focus-within .auth-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(4px);
+}
+
+@media (max-width: 600px) {
+  .auth-panel {
+    border-radius: 22px;
+    margin-top: -8px;
+  }
+
+  .auth-tooltip {
+    left: 0;
+    transform: translateY(-4px);
+    width: 230px;
+  }
+
+  .auth-help:hover .auth-tooltip,
+  .auth-help:focus-within .auth-tooltip {
+    transform: translateY(4px);
+  }
+}  border: 1px solid rgba(255, 255, 255, 0.85);
   padding: 10px 16px;
   border-radius: 999px;
   color: #222;
