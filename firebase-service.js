@@ -18,13 +18,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD7Ww35Cq_aXBHnZsHfu4rW0RvPcFFQWs",
+  apiKey: "AIzaSyD7WwW35Cq_aXBHnZsHfu4rW0RvPcFFQWs",
   authDomain: "glow-up-web.firebaseapp.com",
   projectId: "glow-up-web",
   storageBucket: "glow-up-web.firebasestorage.app",
   messagingSenderId: "301169460622",
-  appId: "1:301169460622:web:e3270974907c5093b550df",
-  measurementId: "G-D72ECBSWX"
+  appId: "1:301169460622:web:12f61cbd2a314285b550df",
+  measurementId: "G-NXKC3XYG9N"
 };
 
 export const REPORTS_KEY = "dailyReports";
@@ -37,6 +37,7 @@ const db = getFirestore(app);
 
 let currentUser = null;
 let authReadyResolve;
+
 export const authReady = new Promise(resolve => {
   authReadyResolve = resolve;
 });
@@ -60,6 +61,7 @@ export function normalizeReports(value) {
       const dateKey = report.dateKey || report.id;
       const tasks = Array.isArray(report.tasks) ? report.tasks : [];
       const fields = Array.isArray(report.fields) ? report.fields : [];
+
       const total = Number.isFinite(report.total) ? report.total : tasks.length;
       const completed = Number.isFinite(report.completed)
         ? report.completed
@@ -101,13 +103,18 @@ function mergeReports(localReports, cloudReports) {
     if (!id) return;
 
     const existing = map.get(id);
+
     if (!existing) {
       map.set(id, report);
       return;
     }
 
-    const existingTime = Date.parse(existing.savedTimestamp || existing.updatedAt || "") || 0;
-    const nextTime = Date.parse(report.savedTimestamp || report.updatedAt || "") || 0;
+    const existingTime =
+      Date.parse(existing.savedTimestamp || existing.updatedAt || "") || 0;
+
+    const nextTime =
+      Date.parse(report.savedTimestamp || report.updatedAt || "") || 0;
+
     map.set(id, nextTime >= existingTime ? report : existing);
   });
 
@@ -126,26 +133,43 @@ function reportDocRef(dateKey, user = currentUser) {
 
 export async function getCloudReports() {
   await authReady;
+
   if (!currentUser) return [];
 
   const snapshot = await getDocs(reportsCollectionRef());
-  return normalizeReports(snapshot.docs.map(item => ({ id: item.id, ...item.data() })));
+
+  return normalizeReports(
+    snapshot.docs.map(item => ({
+      id: item.id,
+      ...item.data()
+    }))
+  );
 }
 
 export async function syncLocalReportsToCloud(reports = getLocalReports()) {
   await authReady;
+
   if (!currentUser) return;
 
   await Promise.all(
     normalizeReports(reports).map(report => {
       const ref = reportDocRef(report.dateKey);
-      return setDoc(ref, { ...report, cloudUpdatedAt: serverTimestamp() }, { merge: true });
+
+      return setDoc(
+        ref,
+        {
+          ...report,
+          cloudUpdatedAt: serverTimestamp()
+        },
+        { merge: true }
+      );
     })
   );
 }
 
 export async function loadReports() {
   const localReports = getLocalReports();
+
   await authReady;
 
   if (!currentUser) {
@@ -154,14 +178,18 @@ export async function loadReports() {
 
   const cloudReports = await getCloudReports();
   const merged = mergeReports(localReports, cloudReports);
+
   saveLocalReports(merged);
   await syncLocalReportsToCloud(merged);
+
   return merged;
 }
 
 export async function saveReport(report) {
   const localReports = getLocalReports();
-  const existingIndex = localReports.findIndex(item => item.dateKey === report.dateKey);
+  const existingIndex = localReports.findIndex(
+    item => item.dateKey === report.dateKey
+  );
 
   if (existingIndex >= 0) {
     localReports[existingIndex] = report;
@@ -173,19 +201,32 @@ export async function saveReport(report) {
   localStorage.setItem(SELECTED_DAY_KEY, report.dateKey);
 
   await authReady;
+
   if (currentUser) {
     const ref = reportDocRef(report.dateKey);
-    await setDoc(ref, { ...report, cloudUpdatedAt: serverTimestamp() }, { merge: true });
+
+    await setDoc(
+      ref,
+      {
+        ...report,
+        cloudUpdatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
   }
 
   return savedReports;
 }
 
 export async function deleteReport(dateKey) {
-  const updated = getLocalReports().filter(report => report.dateKey !== dateKey);
+  const updated = getLocalReports().filter(
+    report => report.dateKey !== dateKey
+  );
+
   saveLocalReports(updated);
 
   await authReady;
+
   if (currentUser) {
     await deleteDoc(reportDocRef(dateKey));
   }
@@ -198,10 +239,13 @@ export async function clearReports() {
   localStorage.removeItem(SELECTED_DAY_KEY);
 
   await authReady;
+
   if (currentUser) {
     const snapshot = await getDocs(reportsCollectionRef());
     const batch = writeBatch(db);
+
     snapshot.docs.forEach(item => batch.delete(item.ref));
+
     await batch.commit();
   }
 }
@@ -211,9 +255,11 @@ export function createAuthPanel() {
 
   const header = document.querySelector(".hero");
   const nav = document.querySelector(".top-nav");
+
   const panel = document.createElement("div");
   panel.id = "authPanel";
   panel.className = "auth-panel";
+
   panel.innerHTML = `
     <span id="authStatus">Проверяю вход...</span>
     <button type="button" id="signInButton" class="small-button">Войти через Google</button>
@@ -233,7 +279,9 @@ export function createAuthPanel() {
       window.dispatchEvent(new CustomEvent("glowup-auth-changed"));
     } catch (error) {
       console.error("Google sign-in failed", error);
-      alert("Не получилось войти через Google. Проверь, что домен GitHub Pages добавлен в Firebase → Authentication → Settings → Authorized domains.");
+      alert(
+        "Не получилось войти через Google. Проверь Firebase → Authentication → Settings → Authorized domains."
+      );
     }
   });
 
@@ -255,7 +303,8 @@ function updateAuthUI(user) {
     signInButton.hidden = true;
     signOutButton.hidden = false;
   } else {
-    status.textContent = "Войди через Google, чтобы синхронизировать телефон и ноутбук.";
+    status.textContent =
+      "Войди через Google, чтобы синхронизировать телефон и ноутбук.";
     signInButton.hidden = false;
     signOutButton.hidden = true;
   }
